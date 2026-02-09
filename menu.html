@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Example</title>
+<!--Beginning of CSS-->
+    <style>
+        * {
+            /*The border-box ensures all elements have it applied globally to make the layout consistent. This is what the "*" is for at the beginning.*/
+            box-sizing: border-box;
+        }
+        /*The body consists of a solid background color. It has 0 for margin and padding to remove default spacing by the browser*/
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: rgb(177, 231, 192);
+        }
+        /*The nav bar is a single color. We use a flex container to set the flex direction to row to display flex items horizontally*/
+        nav {
+            background-color: rgb(32, 131, 54);
+            display: flex;
+            flex-direction: row;
+        }
+        /*nav > div:hover means styles are applied when the user hovers over the div element. nav > div:focus-within means styles are applied when the div element is focused with a click or keyboard press*/
+        /*Posiiton relative keeps the dropdown menus positioned relative to their parent div*/
+        nav > div:hover, nav > div:focus-within {
+            background-color: rgb(39, 196, 64);
+            position: relative;
+        }
+        /*Makes all h2 and label have a min-width of 100px and all margins of 0. Display:block makes the edit tab allign with the others.*/
+        /*Note that h2 is bold by deault, while label is not. This is why the edit tab is not bold like the others*/
+        h2, label {
+            display: block;
+            margin: 0;
+            padding: 0;
+            min-width: 100px;
+            font-size: large;
+        }
+        /*Display none means the dropdown menus are hidden by default. The flex-direction makes the dropdown menus appear vertically. Position absolute keeps the dropdown menus positioned relative to their parent div*/
+        nav > div > div {
+            display: none;
+            flex-direction: column;
+            position: absolute;
+            background-color: rgb(45, 223, 75);
+        }
+        /*When the user hovers over or clicks on the parent div, the dropdown menu becomes visible and is displayed as a flex container with vertical direction*/
+        /*The focus-within selector allows the edit menu to stay open when clicked*/
+        nav > div:hover > div, nav > div:focus-within > div {
+            display: flex;
+        }
+        /*The nav input is the invisible checkbox that allows the edit menu to stay open when clicked. It is positioned off-screen to hide it from view*/
+        nav input {
+            position: absolute;
+            top: -100px;
+        }
+        /*The nav a styles the dropdown menu items. Display block makes the entire area of the link clickable. Padding adds space around the text. Text-decoration none removes the underline from the links*/
+        nav a {
+            display: block;
+            padding: 5px 5px;
+            text-decoration: none;
+        }
+        /*makes the dropdown menu items change background color on hover*/
+        nav a:hover {
+            background-color: rgb(1, 255, 30);
+        }
+        /*The container class is used to center the content and set a max-width for better readability. Margin auto centers the container horizontally*/
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+        /*The message and othermessage classes style the two message boxes with different background colors, left borders, padding, and margins*/
+        .message {
+            background-color: rgb(255, 255, 255);
+            border-left: 5px solid rgb(30, 189, 57);
+            padding: 10px;
+            margin: 20px;
+        }
+        .othermessage {
+            background-color: rgb(255, 255, 255);
+            border-left: 5px solid rgb(245, 218, 80);
+            padding: 10px;
+            margin: 20px;
+        }
+    </style>
+    <!-- End of CSS -->
+</head>
+<body>
+
+    <!-- Navigation bar -->
+    <nav>
+        <!-- File menu -->
+        <div>
+            <h2>File</h2>
+            <div>
+                <a href="">New</a>
+                <a href="">Open</a>
+                <a href="">Save</a>
+                <a href="">Print</a>
+                <a href="">Close</a>
+            </div>
+        </div>
+
+        <!-- Edit menu (uses hidden input to toggle) -->
+        <div>
+            <label>
+                <input />
+                Edit
+            </label>
+            <div>
+                <a href="">Undo</a>
+                <a href="">Redo</a>
+                <a href="">Cut</a>
+                <a href="">Copy</a>
+                <a href="">Paste</a>
+                <a href="">Delete</a>
+                <a href="">Select All</a>
+            </div>
+        </div>
+
+        <!-- View menu -->
+        <div>
+            <h2>View</h2>
+            <div>
+                <a href="">Zoom In</a>
+                <a href="">Zoom Out</a>
+                <a href="">Actual Size</a>
+                <a href="">Fit Page</a>
+                <a href="">Fit Width</a>
+                <a href="">Fit Height</a>
+                <a href="">Rotate Left</a>
+                <a href="">Rotate Right</a>
+                <a href="">Full Screen</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page content container -->
+    <div class="container">
+
+        <!-- Top box -->
+        <div class="message">
+            <h3>Box 1</h3>
+            <p>
+                An attempt to recreate the page using <b><i>only CSS</i></b>. There are some small mistakes:
+                1) Colors are off.
+                2) Margins and padding are off in some areas
+            </p>
+        </div>
+
+        <!-- Extra credit box -->
+        <div class="othermessage">
+            <h3>Extra Credit</h3>
+            <p>
+                The edit menu is implemented using a hidden checkbox input. 
+                This allows the menu to stay open when clicked, and it can be closed by clicking outside of it.
+                This is a neat technique for creating toggleable elements in CSS without JavaScript.
+            </p>
+        </div>
+
+    </div>
+
+</body>
+</html>
