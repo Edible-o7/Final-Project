@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Activity } from '../stores/auth'
+import ActivityCard from './ActivityCard.vue'
 
 const props = defineProps<{ activities: Activity[] }>()
 defineEmits<{
@@ -23,7 +24,3 @@ defineEmits<{
     />
   </div>
 </template>
-
-<script setup lang="ts">
-import ActivityCard from './ActivityCard.vue'
-</script>
