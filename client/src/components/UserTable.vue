@@ -24,8 +24,8 @@ const emit = defineEmits<{
         <td>{{ user.username }}</td>
         <td>{{ user.role }}</td>
         <td>
-          <button class="button is-small is-info" @click="$emit('edit', user)">Edit</button>
-          <button class="button is-small is-danger" @click="$emit('delete', user)">Delete</button>
+          <button class="button is-small is-info" @click="emit('edit', user)">Edit</button>
+          <button class="button is-small is-danger" @click="emit('delete', user)">Delete</button>
         </td>
       </tr>
     </tbody>
