@@ -96,24 +96,11 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function register(name: string, username: string, password: string) {
-    const existing = users.value.find((u) => u.username === username)
-    if (existing) {
-      return { success: false, message: 'Username already exists' }
-    }
+    const result = addUser({ name, username, password, role: 'user' })
+    if (!result.success || !result.user) return result
 
-    const id = Date.now().toString()
-    const newUser: User = {
-      id,
-      name,
-      username,
-      password,
-      role: 'user',
-    }
-
-    users.value.push(newUser)
-    currentUserId.value = id
-
-    return { success: true, user: newUser }
+    currentUserId.value = result.user.id
+    return result
   }
 
   function addActivity(payload: Omit<Activity, 'id' | 'userId'>) {
@@ -124,6 +111,51 @@ export const useAuthStore = defineStore('auth', () => {
 
   function deleteActivity(id: string) {
     activities.value = activities.value.filter((activity) => activity.id !== id)
+  }
+
+  function updateActivity(id: string, payload: Partial<Omit<Activity, 'id' | 'userId'>>) {
+    const index = activities.value.findIndex((activity) => activity.id === id)
+    if (index === -1) return
+
+    const existing = activities.value[index]
+    activities.value[index] = { ...(existing as Activity), ...(payload as Partial<Activity>) } as Activity
+  }
+
+  function isUsernameTaken(username: string, excludeId?: string) {
+    return users.value.some((u) => u.username === username && u.id !== excludeId)
+  }
+
+  function addUser(payload: Omit<User, 'id'>) {
+    if (isUsernameTaken(payload.username)) {
+      return { success: false, message: 'Username already exists' }
+    }
+
+    const id = Date.now().toString()
+    const newUser: User = { id, ...payload }
+    users.value.push(newUser)
+
+    return { success: true, user: newUser }
+  }
+
+  function updateUser(id: string, payload: Partial<Omit<User, 'id'>>) {
+    const index = users.value.findIndex((u) => u.id === id)
+    if (index === -1) {
+      return { success: false, message: 'User not found' }
+    }
+
+    if (payload.username && isUsernameTaken(payload.username, id)) {
+      return { success: false, message: 'Username already exists' }
+    }
+
+    users.value[index] = { ...(users.value[index] as User), ...(payload as Partial<User>) } as User
+    return { success: true, user: users.value[index] }
+  }
+
+  function deleteUser(id: string) {
+    users.value = users.value.filter((u) => u.id !== id)
+    if (currentUserId.value === id) {
+      currentUserId.value = null
+    }
   }
 
   function getUserById(id: string) {
@@ -141,7 +173,11 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     register,
+    addUser,
+    updateUser,
+    deleteUser,
     addActivity,
+    updateActivity,
     deleteActivity,
     getUserById,
   }

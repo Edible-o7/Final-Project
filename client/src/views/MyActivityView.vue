@@ -10,9 +10,31 @@ const description = ref('')
 const distance = ref('')
 const duration = ref('')
 const date = ref(new Date().toISOString().slice(0, 10))
+const editingId = ref<string | null>(null)
+
+function resetForm() {
+  title.value = ''
+  description.value = ''
+  distance.value = ''
+  duration.value = ''
+  date.value = new Date().toISOString().slice(0, 10)
+  editingId.value = null
+}
 
 function addActivity() {
   if (!title.value.trim() || !distance.value.trim() || !duration.value.trim()) {
+    return
+  }
+
+  if (editingId.value) {
+    auth.updateActivity(editingId.value, {
+      title: title.value.trim(),
+      description: description.value.trim(),
+      distance: distance.value.trim(),
+      duration: duration.value.trim(),
+      date: date.value,
+    })
+    resetForm()
     return
   }
 
@@ -24,11 +46,20 @@ function addActivity() {
     date: date.value,
   })
 
-  title.value = ''
-  description.value = ''
-  distance.value = ''
-  duration.value = ''
-  date.value = new Date().toISOString().slice(0, 10)
+  resetForm()
+}
+
+function editActivity(activity: { id: string; title: string; description: string; distance: string; duration: string; date: string }) {
+  title.value = activity.title
+  description.value = activity.description
+  distance.value = activity.distance
+  duration.value = activity.duration
+  date.value = activity.date
+  editingId.value = activity.id
+}
+
+function cancelEdit() {
+  resetForm()
 }
 </script>
 
@@ -90,7 +121,15 @@ function addActivity() {
             <div class="field">
               <div class="control">
                 <button class="button is-primary" @click="addActivity" :disabled="!auth.isAuthenticated">
-                  Add activity
+                  {{ editingId ? 'Save changes' : 'Add activity' }}
+                </button>
+                <button
+                  v-if="editingId"
+                  class="button is-light"
+                  @click="cancelEdit"
+                  type="button"
+                >
+                  Cancel
                 </button>
               </div>
             </div>
@@ -112,7 +151,10 @@ function addActivity() {
                 </div>
 
                 <div class="level-right">
-                  <button class="button is-small is-danger" @click="auth.deleteActivity(activity.id)">
+<button class="button is-small is-warning" @click="editActivity(activity)">
+                  Edit
+                </button>
+                <button class="button is-small is-danger" @click="auth.deleteActivity(activity.id)">
                     Delete
                   </button>
                 </div>
