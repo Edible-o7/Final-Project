@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: exercise-app-server
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    autoDeploy: true
+
+  - type: static
+    name: exercise-app-client
+    env: static
+    plan: free
+    region: oregon
+    buildCommand: cd client && npm install --include=dev && npm run build
+    staticPublishPath: client/dist
+    autoDeploy: true
