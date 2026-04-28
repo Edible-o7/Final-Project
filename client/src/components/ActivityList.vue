@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { Activity } from '../stores/auth'
+import type { ActivityRecord } from '@/types/domain'
 import ActivityCard from './ActivityCard.vue'
 
-const props = defineProps<{ activities: Activity[] }>()
+const props = defineProps<{ activities: ActivityRecord[] }>()
 defineEmits<{
-  (e: 'edit', activity: Activity): void
-  (e: 'delete', activity: Activity): void
+  (e: 'edit', activity: ActivityRecord): void
+  (e: 'delete', activity: ActivityRecord): void
 }>()
 </script>
 

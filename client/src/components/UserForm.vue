@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 
-type UserRole = 'user' | 'admin'
-
 interface UserPayload {
-  id?: number
+  id?: number | string
   firstName?: string
   lastName?: string
   email?: string
   password?: string
-  role?: UserRole
+  role?: string
 }
 
 const props = defineProps<{

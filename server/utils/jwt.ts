@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken"
+import jwt, { type SignOptions } from "jsonwebtoken"
 
 export type UserRole = "admin" | "moderator" | "user"
 
@@ -18,7 +18,10 @@ function getJwtSecret(): string {
 }
 
 export function signAuthToken(payload: AuthTokenPayload): string {
-    const expiresIn = process.env.JWT_EXPIRES_IN?.trim() || "7d"
+    const envExpiry = process.env.JWT_EXPIRES_IN?.trim()
+    const expiresIn: SignOptions["expiresIn"] = envExpiry
+        ? (envExpiry as SignOptions["expiresIn"])
+        : "7d"
 
     return jwt.sign(payload, getJwtSecret(), { expiresIn })
 }

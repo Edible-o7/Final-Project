@@ -8,12 +8,13 @@ function getAuthedUser(req: Request): NonNullable<AuthenticatedRequest["user"]> 
     return authedRequest.user ?? null
 }
 
-function parsePositiveId(value: string | undefined): number | null {
-    if (!value) {
+function parsePositiveId(value: string | string[] | undefined): number | null {
+    const raw = Array.isArray(value) ? value[0] : value
+    if (!raw) {
         return null
     }
 
-    const parsed = Number(value)
+    const parsed = Number(raw)
     if (!Number.isInteger(parsed) || parsed <= 0) {
         return null
     }

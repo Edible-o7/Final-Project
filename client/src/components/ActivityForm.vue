@@ -1,24 +1,26 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
-import type { Activity } from '../stores/auth'
+import type { ActivityFormPayload, ActivityRecord } from '@/types/domain'
 
 const props = defineProps<{
   mode: 'add' | 'edit'
-  activity?: Activity | null
+  activity?: ActivityRecord | null
   disabled?: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'save', payload: Omit<Activity, 'id' | 'userId'>): void
+  (e: 'save', payload: ActivityFormPayload): void
   (e: 'cancel'): void
 }>()
 
 const form = reactive({
+  exerciseTypeId: 1,
   title: '',
-  description: '',
-  distance: '',
-  duration: '',
-  date: new Date().toISOString().slice(0, 10),
+  notes: '',
+  durationMinutes: 30,
+  caloriesBurned: 0,
+  activityDate: new Date().toISOString().slice(0, 10),
+  isPrivate: false,
 })
 
 const buttonLabel = computed(() => (props.mode === 'edit' ? 'Save changes' : 'Add activity'))
@@ -27,34 +29,40 @@ watch(
   () => props.activity,
   (activity) => {
     if (!activity) {
+      form.exerciseTypeId = 1
       form.title = ''
-      form.description = ''
-      form.distance = ''
-      form.duration = ''
-      form.date = new Date().toISOString().slice(0, 10)
+      form.notes = ''
+      form.durationMinutes = 30
+      form.caloriesBurned = 0
+      form.activityDate = new Date().toISOString().slice(0, 10)
+      form.isPrivate = false
       return
     }
 
+    form.exerciseTypeId = activity.exerciseTypeId
     form.title = activity.title
-    form.description = activity.description
-    form.distance = activity.distance
-    form.duration = activity.duration
-    form.date = activity.date
+    form.notes = activity.notes ?? ''
+    form.durationMinutes = activity.durationMinutes
+    form.caloriesBurned = activity.caloriesBurned
+    form.activityDate = activity.activityDate
+    form.isPrivate = activity.isPrivate
   },
   { immediate: true }
 )
 
 function onSubmit() {
-  if (!form.title.trim() || !form.distance.trim() || !form.duration.trim()) {
+  if (!form.title.trim() || !Number.isFinite(form.durationMinutes) || form.durationMinutes <= 0) {
     return
   }
 
   emit('save', {
+    exerciseTypeId: form.exerciseTypeId,
     title: form.title.trim(),
-    description: form.description.trim(),
-    distance: form.distance.trim(),
-    duration: form.duration.trim(),
-    date: form.date,
+    notes: form.notes.trim() || null,
+    durationMinutes: Number(form.durationMinutes),
+    caloriesBurned: Number(form.caloriesBurned) || 0,
+    activityDate: form.activityDate,
+    isPrivate: form.isPrivate,
   })
 }
 
@@ -70,6 +78,13 @@ function onCancel() {
     <div class="columns is-multiline">
       <div class="column is-half">
         <div class="field">
+          <label class="label">Exercise Type ID</label>
+          <div class="control">
+            <input class="input" v-model.number="form.exerciseTypeId" type="number" min="1" />
+          </div>
+        </div>
+
+        <div class="field">
           <label class="label">Title</label>
           <div class="control">
             <input class="input" v-model="form.title" placeholder="Walk around campus" />
@@ -77,31 +92,42 @@ function onCancel() {
         </div>
 
         <div class="field">
-          <label class="label">Description</label>
+          <label class="label">Notes</label>
           <div class="control">
-            <input class="input" v-model="form.description" placeholder="How did it go?" />
+            <input class="input" v-model="form.notes" placeholder="How did it go?" />
           </div>
         </div>
 
         <div class="field">
-          <label class="label">Distance</label>
+          <label class="label">Duration (minutes)</label>
           <div class="control">
-            <input class="input" v-model="form.distance" placeholder="1.2 mi" />
+            <input class="input" v-model.number="form.durationMinutes" type="number" min="1" />
           </div>
         </div>
 
         <div class="field">
-          <label class="label">Duration</label>
+          <label class="label">Calories</label>
           <div class="control">
-            <input class="input" v-model="form.duration" placeholder="0:45" />
+            <input class="input" v-model.number="form.caloriesBurned" type="number" min="0" />
           </div>
         </div>
 
         <div class="field">
           <label class="label">Date</label>
           <div class="control">
-            <input class="input" v-model="form.date" type="date" />
+            <input class="input" v-model="form.activityDate" type="date" />
           </div>
+        </div>
+
+        <div class="field">
+          <label class="checkbox">
+            <input type="checkbox" v-model="form.isPrivate" />
+            Private activity
+          </label>
+        </div>
+
+        <div class="field">
+          <p class="help is-info">Use a valid Exercise Type ID from your database.</p>
         </div>
 
         <div class="field">

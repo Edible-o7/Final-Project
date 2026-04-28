@@ -1,61 +1,89 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import UserForm from '../components/UserForm.vue'
 import UserTable from '../components/UserTable.vue'
-import type { Role, User } from '../stores/auth'
+import { listUsers, updateUser, deleteUser } from '@/services/userService'
+
+interface AdminUser {
+  id: number | string
+  firstName?: string
+  lastName?: string
+  email?: string
+  role?: string
+}
 
 const auth = useAuthStore()
-const users = computed(() => auth.users)
+const users = ref<AdminUser[]>([])
 const isAdmin = computed(() => auth.isAdmin)
 
-const mode = ref<'add' | 'edit'>('add')
-const selectedUser = ref<User | null>(null)
+const mode = ref<'add' | 'edit'>('edit')
+const selectedUser = ref<AdminUser | null>(null)
 const error = ref('')
+const loading = ref(false)
 
-function startEdit(user: User) {
+async function loadUsers() {
+  if (!isAdmin.value) return
+  loading.value = true
+  error.value = ''
+  try {
+    const res = await listUsers()
+    users.value = (res?.users ?? []) as AdminUser[]
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Unable to load users.'
+  } finally {
+    loading.value = false
+  }
+}
+
+function startEdit(user: AdminUser) {
   mode.value = 'edit'
   selectedUser.value = user
   error.value = ''
 }
 
 function resetForm() {
-  mode.value = 'add'
+  mode.value = 'edit'
   selectedUser.value = null
   error.value = ''
 }
 
-function save(payload: { name: string; username: string; password: string; role: Role }) {
+async function save(payload: {
+  firstName?: string
+  lastName?: string
+  email?: string
+  password?: string
+  role?: string
+}) {
   error.value = ''
 
-  if (mode.value === 'add') {
-    const result = auth.addUser(payload)
-    if (!result.success) {
-      error.value = result.message ?? 'Unable to create user.'
-      return
-    }
+  if (!selectedUser.value) {
+    error.value = 'Select a user to edit from the table.'
+    return
+  }
 
+  try {
+    await updateUser(Number(selectedUser.value.id), payload)
+    await loadUsers()
     resetForm()
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Unable to update user.'
     return
   }
-
-  if (!selectedUser.value) return
-
-  const result = auth.updateUser(selectedUser.value.id, payload)
-  if (!result.success) {
-    error.value = result.message ?? 'Unable to update user.'
-    return
-  }
-
-  resetForm()
 }
 
-function remove(user: User) {
-  if (!confirm(`Delete user "${user.username}"? This cannot be undone.`)) return
+async function remove(user: AdminUser) {
+  const label = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.email
+  if (!confirm(`Delete user "${label}"? This cannot be undone.`)) return
 
-  auth.deleteUser(user.id)
+  await deleteUser(Number(user.id))
+  await loadUsers()
   if (selectedUser.value?.id === user.id) resetForm()
 }
+
+onMounted(async () => {
+  await loadUsers()
+})
 </script>
 
 <template>
@@ -69,6 +97,8 @@ function remove(user: User) {
       </div>
 
       <div v-else>
+        <div class="notification is-info" v-if="loading">Loading users...</div>
+
         <UserForm
           :mode="mode"
           :user="selectedUser"
@@ -79,7 +109,7 @@ function remove(user: User) {
 
         <p class="help is-danger" v-if="error">{{ error }}</p>
 
-        <h2 class="subtitle">Registered users</h2>
+        <h2 class="subtitle">Registered users (select one to edit)</h2>
         <UserTable :users="users" @edit="startEdit" @delete="remove" />
       </div>
     </div>
