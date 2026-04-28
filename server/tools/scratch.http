@@ -1,0 +1,134 @@
+@baseUrl = http://localhost:3000
+@token = 
+
+### API root
+GET {{baseUrl}}/
+
+### Signup
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "firstName": "Alice",
+  "lastName": "Smith",
+  "email": "alice@example.com",
+  "password": "password123"
+}
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "alice@example.com",
+  "password": "password123"
+}
+
+### Me
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### List users (admin only)
+GET {{baseUrl}}/users
+Authorization: Bearer {{token}}
+
+### Get user by id
+GET {{baseUrl}}/users/1
+Authorization: Bearer {{token}}
+
+### Update user by id
+PUT {{baseUrl}}/users/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "firstName": "Updated",
+  "lastName": "User"
+}
+
+### Delete user by id
+DELETE {{baseUrl}}/users/1
+Authorization: Bearer {{token}}
+
+### Weekly summary for a user
+GET {{baseUrl}}/users/1/weekly-summary?days=7
+Authorization: Bearer {{token}}
+
+### Current streak for a user
+GET {{baseUrl}}/users/1/streak
+Authorization: Bearer {{token}}
+
+### List exercise types
+GET {{baseUrl}}/exercise-types
+
+### Get exercise type by id
+GET {{baseUrl}}/exercise-types/1
+
+### Create exercise type
+POST {{baseUrl}}/exercise-types
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Running",
+  "category": "Cardio",
+  "description": "Outdoor running"
+}
+
+### Update exercise type
+PUT {{baseUrl}}/exercise-types/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "description": "Updated description"
+}
+
+### Delete exercise type
+DELETE {{baseUrl}}/exercise-types/1
+Authorization: Bearer {{token}}
+
+### My activities
+GET {{baseUrl}}/activities/mine
+Authorization: Bearer {{token}}
+
+### Friend activity feed
+GET {{baseUrl}}/activities/friends
+Authorization: Bearer {{token}}
+
+### Leaderboard
+GET {{baseUrl}}/activities/leaderboard?days=30&limit=10
+
+### Get activity by id
+GET {{baseUrl}}/activities/1
+Authorization: Bearer {{token}}
+
+### Create activity
+POST {{baseUrl}}/activities
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "exerciseTypeId": 1,
+  "title": "Morning Run",
+  "durationMinutes": 30,
+  "caloriesBurned": 250,
+  "activityDate": "2026-04-27",
+  "notes": "Felt good",
+  "isPrivate": false
+}
+
+### Update activity
+PUT {{baseUrl}}/activities/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Updated Run",
+  "durationMinutes": 35,
+  "notes": "Finished stronger"
+}
+
+### Delete activity
+DELETE {{baseUrl}}/activities/1
+Authorization: Bearer {{token}}
