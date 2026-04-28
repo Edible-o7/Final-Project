@@ -38,6 +38,9 @@ coverage/
 .env.test
 .env.production
 
+# Ignore server local env file if present (keeps secrets out of repo)
+/server/.env
+
 # OS files
 .DS_Store
 Thumbs.db

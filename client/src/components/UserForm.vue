@@ -1,23 +1,34 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
-import type { Role, User } from '../stores/auth'
+
+type UserRole = 'user' | 'admin'
+
+interface UserPayload {
+  id?: number
+  firstName?: string
+  lastName?: string
+  email?: string
+  password?: string
+  role?: UserRole
+}
 
 const props = defineProps<{
   mode: 'add' | 'edit'
-  user?: User | null
+  user?: UserPayload | null
   disabled?: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'save', payload: { name: string; username: string; password: string; role: Role }): void
+  (e: 'save', payload: UserPayload): void
   (e: 'cancel'): void
 }>()
 
-const form = reactive({
-  name: '',
-  username: '',
+const form = reactive<UserPayload>({
+  firstName: '',
+  lastName: '',
+  email: '',
   password: '',
-  role: 'user' as Role,
+  role: 'user',
 })
 
 const buttonLabel = computed(() => (props.mode === 'edit' ? 'Save changes' : 'Create user'))
@@ -25,33 +36,41 @@ const buttonLabel = computed(() => (props.mode === 'edit' ? 'Save changes' : 'Cr
 watch(
   () => props.user,
   (user) => {
-    if (!user) {
-      form.name = ''
-      form.username = ''
-      form.password = ''
-      form.role = 'user'
-      return
-    }
+      if (!user) {
+        form.firstName = ''
+        form.lastName = ''
+        form.email = ''
+        form.password = ''
+        form.role = 'user'
+        return
+      }
 
-    form.name = user.name
-    form.username = user.username
-    form.password = user.password
-    form.role = user.role
+      form.firstName = user.firstName ?? ''
+      form.lastName = user.lastName ?? ''
+      form.email = user.email ?? ''
+      form.password = ''
+      form.role = user.role ?? 'user'
   },
   { immediate: true }
 )
 
 function onSubmit() {
-  if (!form.name.trim() || !form.username.trim() || !form.password.trim()) {
+  if (!form.firstName?.trim() || !form.lastName?.trim() || !form.email?.trim()) {
     return
   }
 
-  emit('save', {
-    name: form.name.trim(),
-    username: form.username.trim(),
-    password: form.password,
+  const payload: UserPayload = {
+    firstName: form.firstName?.trim(),
+    lastName: form.lastName?.trim(),
+    email: form.email?.trim(),
     role: form.role,
-  })
+  }
+
+  if (form.password) {
+    payload.password = form.password
+  }
+
+  emit('save', payload)
 }
 
 function onCancel() {
@@ -64,23 +83,35 @@ function onCancel() {
     <h2 class="subtitle">{{ props.mode === 'add' ? 'Add user' : 'Edit user' }}</h2>
 
     <div class="field">
-      <label class="label">Name</label>
+      <label class="label">First name</label>
       <div class="control">
-        <input class="input" v-model="form.name" type="text" placeholder="Name" />
+        <input class="input" v-model="form.firstName" type="text" placeholder="First name" />
       </div>
     </div>
 
     <div class="field">
-      <label class="label">Username</label>
+      <label class="label">Last name</label>
       <div class="control">
-        <input class="input" v-model="form.username" type="text" placeholder="Username" />
+        <input class="input" v-model="form.lastName" type="text" placeholder="Last name" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label">Email</label>
+      <div class="control">
+        <input class="input" v-model="form.email" type="email" placeholder="Email" />
       </div>
     </div>
 
     <div class="field">
       <label class="label">Password</label>
       <div class="control">
-        <input class="input" v-model="form.password" type="password" placeholder="Password" />
+        <input
+          class="input"
+          v-model="form.password"
+          type="password"
+          :placeholder="props.mode === 'edit' ? 'Leave blank to keep current password' : 'Password'"
+        />
       </div>
     </div>
 

@@ -6,22 +6,23 @@ import { useAuthStore } from '../stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 
-const name = ref('')
-const username = ref('')
+const firstName = ref('')
+const lastName = ref('')
+const email = ref('')
 const password = ref('')
 const error = ref('')
 
-function submit() {
+async function submit() {
   error.value = ''
 
-  if (!name.value.trim() || !username.value.trim() || !password.value) {
+  if (!firstName.value.trim() || !lastName.value.trim() || !email.value.trim() || !password.value) {
     error.value = 'All fields are required.'
     return
   }
 
-  const result = auth.register(name.value.trim(), username.value.trim(), password.value)
-  if (!result.success) {
-    error.value = result.message ?? 'Unable to create account.'
+  const res = await auth.register({ firstName: firstName.value.trim(), lastName: lastName.value.trim(), email: email.value.trim(), password: password.value })
+  if (!res.success) {
+    error.value = res.message ?? 'Unable to create account.'
     return
   }
 
@@ -36,16 +37,23 @@ function submit() {
 
       <div class="box" style="max-width: 440px;">
         <div class="field">
-          <label class="label">Name</label>
+          <label class="label">First name</label>
           <div class="control">
-            <input class="input" v-model="name" type="text" placeholder="Your name" />
+            <input class="input" v-model="firstName" type="text" placeholder="First name" />
           </div>
         </div>
 
         <div class="field">
-          <label class="label">Username</label>
+          <label class="label">Last name</label>
           <div class="control">
-            <input class="input" v-model="username" type="text" placeholder="Choose a username" />
+            <input class="input" v-model="lastName" type="text" placeholder="Last name" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Email</label>
+          <div class="control">
+            <input class="input" v-model="email" type="email" placeholder="you@example.com" />
           </div>
         </div>
 

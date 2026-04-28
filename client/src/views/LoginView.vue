@@ -6,15 +6,15 @@ import { useAuthStore } from '../stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 
-const username = ref('')
+const email = ref('')
 const password = ref('')
 const error = ref('')
 
-function submit() {
+async function submit() {
   error.value = ''
-  const ok = auth.login(username.value.trim(), password.value)
-  if (!ok) {
-    error.value = 'Invalid username or password.'
+  const res = await auth.login(email.value.trim(), password.value)
+  if (!res.success) {
+    error.value = res.message ?? 'Invalid email or password.'
     return
   }
 
@@ -29,14 +29,14 @@ function submit() {
 
       <div class="box" style="max-width: 420px;">
         <div class="field">
-          <label class="label">Username</label>
+          <label class="label">Email</label>
           <div class="control">
             <input
               class="input"
-              v-model="username"
-              type="text"
-              autocomplete="username"
-              placeholder="Enter username"
+              v-model="email"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
             />
           </div>
         </div>
@@ -68,7 +68,7 @@ function submit() {
         </div>
 
         <p class="is-size-7 has-text-grey">
-          Tip: Use <strong>john</strong>/<strong>password</strong> or <strong>admin</strong>/<strong>admin</strong>
+          Tip: Use an email and password you created via Sign Up.
         </p>
       </div>
     </div>

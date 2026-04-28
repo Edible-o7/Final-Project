@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import type { User } from '../stores/auth'
+interface SafeUser {
+  id: number | string
+  firstName?: string
+  lastName?: string
+  email?: string
+  role?: string
+}
 
-const props = defineProps<{ users: User[] }>()
+const props = defineProps<{ users: SafeUser[] }>()
 const emit = defineEmits<{
-  (e: 'edit', user: User): void
-  (e: 'delete', user: User): void
+  (e: 'edit', user: SafeUser): void
+  (e: 'delete', user: SafeUser): void
 }>()
 </script>
 
@@ -13,15 +19,15 @@ const emit = defineEmits<{
     <thead>
       <tr>
         <th>Name</th>
-        <th>Username</th>
+        <th>Email</th>
         <th>Role</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       <tr v-for="user in props.users" :key="user.id">
-        <td>{{ user.name }}</td>
-        <td>{{ user.username }}</td>
+        <td>{{ (user.firstName ?? '') + ' ' + (user.lastName ?? '') }}</td>
+        <td>{{ user.email }}</td>
         <td>{{ user.role }}</td>
         <td>
           <button class="button is-small is-info" @click="emit('edit', user)">Edit</button>
