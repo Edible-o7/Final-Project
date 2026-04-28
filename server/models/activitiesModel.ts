@@ -100,6 +100,26 @@ export async function listPublicFriendActivities(userIds: number[]): Promise<Act
     return ((data ?? []) as ActivityRow[]).map(mapActivity)
 }
 
+export async function listAcceptedFriendIds(userId: number): Promise<number[]> {
+    const supabase = getSupabaseClient()
+    const { data, error } = await supabase
+        .from("friendships")
+        .select("requester_id, addressee_id")
+        .eq("status", "accepted")
+        .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
+
+    if (error) {
+        throw new Error(error.message)
+    }
+
+    const rows = (data ?? []) as Array<{ requester_id: number; addressee_id: number }>
+    const friendIds = rows
+        .map((row) => (row.requester_id === userId ? row.addressee_id : row.requester_id))
+        .filter((id) => Number.isInteger(id) && id > 0)
+
+    return Array.from(new Set(friendIds))
+}
+
 export async function getActivityById(activityId: number): Promise<Activity | null> {
     const supabase = getSupabaseClient()
     const { data, error } = await supabase
@@ -194,6 +214,21 @@ export async function getFriendFeedSummary(userIds: number[]): Promise<{
         }),
         { totalActivities: 0, totalMinutes: 0 },
     )
+}
+
+export async function getFriendFeedForUser(userId: number): Promise<{
+    friendIds: number[]
+    activities: Activity[]
+    summary: {
+        totalActivities: number
+        totalMinutes: number
+    }
+}> {
+    const friendIds = await listAcceptedFriendIds(userId)
+    const activities = await listPublicFriendActivities(friendIds)
+    const summary = await getFriendFeedSummary(friendIds)
+
+    return { friendIds, activities, summary }
 }
 
 export async function getWeeklyActivitySummary(userId: number, days = 7) {

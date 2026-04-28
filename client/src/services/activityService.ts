@@ -17,9 +17,8 @@ export async function deleteActivity(activityId: number) {
   return api.del(`/activities/${activityId}`)
 }
 
-export async function friendFeed(friendIds: number[]) {
-  const qs = friendIds.length ? `?friendIds=${friendIds.join(',')}` : ''
-  return api.get(`/activities/friends${qs}`)
+export async function friendFeed() {
+  return api.get('/activities/friends')
 }
 
 export async function leaderboard(days?: number, limit?: number) {

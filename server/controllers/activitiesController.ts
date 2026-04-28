@@ -6,9 +6,8 @@ import {
     createActivity,
     deleteActivity,
     getActivityById,
-    getFriendFeedSummary,
+    getFriendFeedForUser,
     listActivitiesByUser,
-    listPublicFriendActivities,
     updateActivity,
 } from "../models/activitiesModel"
 
@@ -198,12 +197,7 @@ export const friendFeed: RequestHandler = async (req, res) => {
             return
         }
 
-        const friendIds = Array.isArray(req.query.friendIds)
-            ? req.query.friendIds.map((value) => Number(value)).filter((value) => Number.isInteger(value) && value > 0)
-            : []
-
-        const activities = await listPublicFriendActivities(friendIds)
-        const summary = await getFriendFeedSummary(friendIds)
+        const { activities, summary } = await getFriendFeedForUser(userId)
 
         res.status(200).json({ activities, summary })
     } catch (error) {

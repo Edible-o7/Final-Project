@@ -5,7 +5,6 @@ import { friendFeed } from '@/services/activityService'
 import type { ActivityRecord } from '@/types/domain'
 
 const auth = useAuthStore()
-const friendIdsInput = ref('')
 const activities = ref<ActivityRecord[]>([])
 const error = ref('')
 const loading = ref(false)
@@ -16,12 +15,7 @@ async function loadFeed() {
   loading.value = true
   error.value = ''
   try {
-    const ids = friendIdsInput.value
-      .split(',')
-      .map((v) => Number(v.trim()))
-      .filter((v) => Number.isInteger(v) && v > 0)
-
-    const res = await friendFeed(ids)
+    const res = await friendFeed()
     activities.value = (res?.activities ?? []) as ActivityRecord[]
   } catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'Unable to load friend activity'
@@ -44,13 +38,7 @@ onMounted(async () => {
       </p>
 
       <div v-if="auth.isAuthenticated">
-        <div class="field" style="max-width: 520px;">
-          <label class="label">Friend user IDs (comma-separated)</label>
-          <div class="control">
-            <input class="input" v-model="friendIdsInput" placeholder="2, 5, 9" />
-          </div>
-          <button class="button is-link mt-2" @click="loadFeed" :disabled="loading">Load Feed</button>
-        </div>
+        <button class="button is-link mb-4" @click="loadFeed" :disabled="loading">Refresh Feed</button>
 
         <div class="notification is-info" v-if="loading">Loading friend activity...</div>
         <div class="notification is-danger" v-else-if="error">{{ error }}</div>
