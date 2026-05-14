@@ -8,7 +8,11 @@ const auth = useAuthStore()
 
 const isActive = ref(false)
 const isLoggedIn = computed(() => auth.isAuthenticated)
-const currentUserName = computed(() => auth.currentUser?.name ?? '')
+const currentUserName = computed(() => {
+  const firstName = auth.currentUser?.firstName ?? ''
+  const lastName = auth.currentUser?.lastName ?? ''
+  return `${firstName} ${lastName}`.trim()
+})
 const currentUserRole = computed(() => auth.currentUser?.role ?? '')
 
 function handleLogout() {

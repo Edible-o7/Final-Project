@@ -96,6 +96,18 @@ Authorization: Bearer {{token}}
 GET {{baseUrl}}/activities/friends
 Authorization: Bearer {{token}}
 
+### Friend activity feed - page 1 (limit 20)
+GET {{baseUrl}}/activities/friends?offset=0&limit=20
+Authorization: Bearer {{token}}
+
+### Friend activity feed - page 2 (limit 20)
+GET {{baseUrl}}/activities/friends?offset=20&limit=20
+Authorization: Bearer {{token}}
+
+### Friend activity feed - custom limit
+GET {{baseUrl}}/activities/friends?offset=0&limit=50
+Authorization: Bearer {{token}}
+
 ### Leaderboard
 GET {{baseUrl}}/activities/leaderboard?days=30&limit=10
 

@@ -3,6 +3,25 @@ import { defineStore } from 'pinia'
 import authService from '@/services/authService'
 import api from '@/services/api'
 
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message.trim()) {
+    return err.message
+  }
+
+  if (err && typeof err === 'object') {
+    const maybeMessage = (err as { message?: unknown }).message
+    if (typeof maybeMessage === 'string' && maybeMessage.trim()) {
+      return maybeMessage
+    }
+  }
+
+  if (typeof err === 'string' && err.trim()) {
+    return err
+  }
+
+  return fallback
+}
+
 export interface SafeUser {
   id: number
   firstName: string
@@ -48,8 +67,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { success: false, message: res?.message }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err)
-      return { success: false, message: message ?? 'Login failed' }
+      return { success: false, message: getErrorMessage(err, 'Login failed') }
     } finally {
       isLoading.value = false
     }
@@ -67,8 +85,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       return { success: false, message: res?.message }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err)
-      return { success: false, message: message ?? 'Signup failed' }
+      return { success: false, message: getErrorMessage(err, 'Signup failed') }
     } finally {
       isLoading.value = false
     }

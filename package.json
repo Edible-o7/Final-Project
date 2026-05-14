@@ -8,7 +8,9 @@
     "build:client": "cd client && npm install && npm run build",
     "start": "node dist/index.js",
     "dev": "tsx watch server/index.ts",
-    "seed": "tsx server/models/seed_data.ts"
+    "seed": "tsx server/models/seed_data.ts",
+    "seed:infinite": "tsx server/tools/seedInfiniteActivities.ts",
+    "seed:feed": "tsx server/tools/seedFriendFeed.ts"
   },
   "author": "Eddie Poma",
   "license": "ISC",

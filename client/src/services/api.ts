@@ -2,6 +2,18 @@ const STORAGE_KEY = "auth_token"
 
 const DEFAULT_BASE = "http://localhost:3000"
 
+function getErrorMessage(value: unknown): string {
+  if (typeof value === "string") return value
+  if (value && typeof value === "object") {
+    const maybeMessage = (value as { message?: unknown }).message
+    if (typeof maybeMessage === "string" && maybeMessage.trim()) {
+      return maybeMessage
+    }
+  }
+
+  return "Request failed"
+}
+
 export function getBaseUrl(): string {
   return (import.meta.env.VITE_API_BASE_URL as string) || DEFAULT_BASE
 }
@@ -19,12 +31,12 @@ async function parseResponse(res: Response) {
   const contentType = res.headers.get("content-type") || ""
   if (contentType.includes("application/json")) {
     const json = await res.json()
-    if (!res.ok) throw json
+    if (!res.ok) throw new Error(getErrorMessage(json))
     return json
   }
 
   const text = await res.text()
-  if (!res.ok) throw { message: text }
+  if (!res.ok) throw new Error(text || "Request failed")
   return text
 }
 

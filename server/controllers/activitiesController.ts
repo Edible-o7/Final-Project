@@ -197,9 +197,31 @@ export const friendFeed: RequestHandler = async (req, res) => {
             return
         }
 
-        const { activities, summary } = await getFriendFeedForUser(userId)
+        // Parse and validate query parameters
+        let offset = 0
+        let limit = 20
 
-        res.status(200).json({ activities, summary })
+        if (req.query.offset) {
+            const parsedOffset = Number(req.query.offset)
+            if (!Number.isInteger(parsedOffset) || parsedOffset < 0) {
+                res.status(400).json({ message: "Invalid offset parameter" })
+                return
+            }
+            offset = parsedOffset
+        }
+
+        if (req.query.limit) {
+            const parsedLimit = Number(req.query.limit)
+            if (!Number.isInteger(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
+                res.status(400).json({ message: "Invalid limit parameter (must be 1-100)" })
+                return
+            }
+            limit = parsedLimit
+        }
+
+        const { activities, total } = await getFriendFeedForUser(userId, offset, limit)
+
+        res.status(200).json({ activities, total, offset, limit })
     } catch (error) {
         const message = error instanceof Error ? error.message : "Unable to load friend feed"
         res.status(500).json({ message })

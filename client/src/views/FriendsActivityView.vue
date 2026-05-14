@@ -1,32 +1,59 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
-import { friendFeed } from '@/services/activityService'
-import type { ActivityRecord } from '@/types/domain'
+import { useInfiniteActivityScroll } from '@/composables/useInfiniteActivityScroll'
+import ActivityCardView from '@/components/ActivityCardView.vue'
+import ActivityCardSkeleton from '@/components/ActivityCardSkeleton.vue'
 
 const auth = useAuthStore()
-const activities = ref<ActivityRecord[]>([])
-const error = ref('')
-const loading = ref(false)
+const scrollContainer = ref<HTMLElement | null>(null)
 
-async function loadFeed() {
-  if (!auth.isAuthenticated) return
+// Initialize infinite scroll composable
+const {
+  items,
+  isLoading,
+  isLoadingMore,
+  error,
+  hasInitialized,
+  hasMore,
+  displayText,
+  setupInfiniteScroll,
+  reset,
+  refresh,
+} = useInfiniteActivityScroll(20)
 
-  loading.value = true
-  error.value = ''
-  try {
-    const res = await friendFeed()
-    activities.value = (res?.activities ?? []) as ActivityRecord[]
-  } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Unable to load friend activity'
-  } finally {
-    loading.value = false
+const hasSetupInfiniteScroll = ref(false)
+
+async function initializeFeedForAuthenticatedUser() {
+  await refresh()
+
+  if (!hasSetupInfiniteScroll.value) {
+    await nextTick()
+    setupInfiniteScroll(scrollContainer.value)
+    hasSetupInfiniteScroll.value = true
   }
 }
 
 onMounted(async () => {
-  await loadFeed()
+  if (!auth.isAuthenticated) return
+  await initializeFeedForAuthenticatedUser()
 })
+
+watch(
+  () => auth.isAuthenticated,
+  async (isAuthenticated) => {
+    if (isAuthenticated) {
+      await initializeFeedForAuthenticatedUser()
+      return
+    }
+
+    reset()
+  },
+)
+
+async function handleRefresh() {
+  await refresh()
+}
 </script>
 
 <template>
@@ -38,34 +65,71 @@ onMounted(async () => {
       </p>
 
       <div v-if="auth.isAuthenticated">
-        <button class="button is-link mb-4" @click="loadFeed" :disabled="loading">Refresh Feed</button>
-
-        <div class="notification is-info" v-if="loading">Loading friend activity...</div>
-        <div class="notification is-danger" v-else-if="error">{{ error }}</div>
-
-        <div v-if="!loading && activities.length === 0" class="notification is-light">
-          No friend activity yet.
+        <div class="mb-4">
+          <button class="button is-link" :disabled="isLoading || isLoadingMore" @click="handleRefresh">
+            Refresh Feed
+          </button>
         </div>
 
-        <div v-for="activity in activities" :key="activity.id" class="box">
-          <div class="level">
-            <div class="level-left">
-              <div>
-                <p class="is-size-5 has-text-weight-semibold">{{ activity.title }}</p>
-                <p class="is-size-7 has-text-grey">
-                  {{ activity.activityDate }} &middot; User #{{ activity.userId }}
-                </p>
-              </div>
+        <!-- Activity counter and status -->
+        <div class="level mb-4">
+          <div class="level-left">
+            <div class="level-item">
+              <p class="subtitle">
+                <span v-if="displayText" class="has-text-info">{{ displayText }}</span>
+              </p>
             </div>
           </div>
+        </div>
 
-          <p class="mb-2">{{ activity.notes || 'No notes' }}</p>
-          <div class="tags">
-            <span class="tag is-info">Duration: {{ activity.durationMinutes }} min</span>
-            <span class="tag is-info">Calories: {{ activity.caloriesBurned }}</span>
+        <!-- Error notification -->
+        <div v-if="error" class="notification is-danger mb-4">
+          <button class="delete" @click="handleRefresh"></button>
+          {{ error }}
+          <div class="mt-2">
+            <button class="button is-small is-danger is-light" @click="handleRefresh">Retry</button>
           </div>
+        </div>
+
+        <!-- Empty state -->
+        <div v-if="hasInitialized && !isLoading && items.length === 0 && !error" class="notification is-light">
+          <p>No friend activity yet. Make sure you have accepted friend requests!</p>
+        </div>
+
+        <!-- Infinite scroll container -->
+        <div
+          v-if="items.length > 0 || isLoading"
+          ref="scrollContainer"
+          class="activities-container"
+          style="max-height: 800px; overflow-y: auto; border: 1px solid #dbdbdb; border-radius: 4px; padding: 1rem"
+        >
+          <!-- Activity cards -->
+          <div v-for="activity in items" :key="activity.id" class="mb-4">
+            <ActivityCardView :activity="activity" />
+          </div>
+
+          <!-- Loading skeletons -->
+          <div v-if="isLoadingMore">
+            <ActivityCardSkeleton v-for="n in 3" :key="`loading-${n}`" class="mb-4" />
+          </div>
+        </div>
+
+        <!-- Initial loading state -->
+        <div v-if="isLoading && items.length === 0" class="activities-container">
+          <ActivityCardSkeleton v-for="n in 5" :key="`initial-${n}`" class="mb-4" />
+        </div>
+
+        <!-- End of list message -->
+        <div v-if="items.length > 0 && !isLoadingMore && !hasMore" class="notification is-success mt-4">
+          <p class="has-text-centered">You've reached the end of the feed! 🎉</p>
         </div>
       </div>
     </div>
   </section>
 </template>
+
+<style scoped>
+.activities-container {
+  /* Scrollable container styling */
+}
+</style>

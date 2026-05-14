@@ -80,24 +80,44 @@ export async function listActivitiesByUser(userId: number): Promise<Activity[]> 
     return ((data ?? []) as ActivityRow[]).map(mapActivity)
 }
 
-export async function listPublicFriendActivities(userIds: number[]): Promise<Activity[]> {
+export async function listPublicFriendActivities(userIds: number[], offset: number = 0, limit: number = 20): Promise<{ activities: Activity[]; total: number }> {
     if (userIds.length === 0) {
-        return []
+        return { activities: [], total: 0 }
     }
 
     const supabase = getSupabaseClient()
+    
+    // Get total count
+    const { count, error: countError } = await supabase
+        .from("activities")
+        .select("*", { count: "exact", head: true })
+        .in("user_id", userIds)
+        .eq("is_private", false)
+
+    if (countError) {
+        throw new Error(countError.message)
+    }
+
+    const total = count ?? 0
+
+    // Get paginated data
     const { data, error } = await supabase
         .from("activities")
         .select("*")
         .in("user_id", userIds)
         .eq("is_private", false)
         .order("activity_date", { ascending: false })
+        .order("id", { ascending: false })
+        .range(offset, offset + limit - 1)
 
     if (error) {
         throw new Error(error.message)
     }
 
-    return ((data ?? []) as ActivityRow[]).map(mapActivity)
+    return {
+        activities: ((data ?? []) as ActivityRow[]).map(mapActivity),
+        total
+    }
 }
 
 export async function listAcceptedFriendIds(userId: number): Promise<number[]> {
@@ -205,7 +225,7 @@ export async function getFriendFeedSummary(userIds: number[]): Promise<{
     totalActivities: number
     totalMinutes: number
 }> {
-    const activities = await listPublicFriendActivities(userIds)
+    const { activities } = await listPublicFriendActivities(userIds, 0, 10000)
 
     return activities.reduce(
         (summary, activity) => ({
@@ -216,19 +236,17 @@ export async function getFriendFeedSummary(userIds: number[]): Promise<{
     )
 }
 
-export async function getFriendFeedForUser(userId: number): Promise<{
+export async function getFriendFeedForUser(userId: number, offset: number = 0, limit: number = 20): Promise<{
     friendIds: number[]
     activities: Activity[]
-    summary: {
-        totalActivities: number
-        totalMinutes: number
-    }
+    total: number
+    offset: number
+    limit: number
 }> {
     const friendIds = await listAcceptedFriendIds(userId)
-    const activities = await listPublicFriendActivities(friendIds)
-    const summary = await getFriendFeedSummary(friendIds)
+    const { activities, total } = await listPublicFriendActivities(friendIds, offset, limit)
 
-    return { friendIds, activities, summary }
+    return { friendIds, activities, total, offset, limit }
 }
 
 export async function getWeeklyActivitySummary(userId: number, days = 7) {
