@@ -1,6 +1,6 @@
 const STORAGE_KEY = "auth_token"
 
-const DEFAULT_BASE = "http://localhost:3000"
+const DEFAULT_BASE = import.meta.env.DEV ? "http://localhost:3000" : ""
 
 function getErrorMessage(value: unknown): string {
   if (typeof value === "string") return value
@@ -15,7 +15,15 @@ function getErrorMessage(value: unknown): string {
 }
 
 export function getBaseUrl(): string {
-  return (import.meta.env.VITE_API_BASE_URL as string) || DEFAULT_BASE
+  const envUrl = (import.meta.env.VITE_API_BASE_URL as string) || ""
+  if (!envUrl && !import.meta.env.DEV) {
+    // In production we should not silently hit localhost; use relative URLs
+    // or set `VITE_API_BASE_URL` in the Render dashboard / render.yaml.
+    // Keep this as a visible warning to catch misconfiguration.
+    // eslint-disable-next-line no-console
+    console.warn("VITE_API_BASE_URL not set — using relative URLs. Set VITE_API_BASE_URL in Render to your API URL.")
+  }
+  return envUrl || DEFAULT_BASE
 }
 
 export function setToken(token: string | null) {
