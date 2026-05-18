@@ -27,6 +27,19 @@ export function getToken(): string | null {
   return localStorage.getItem(STORAGE_KEY)
 }
 
+type RequestBody = unknown
+
+function isBodyInit(value: unknown): value is BodyInit {
+  return (
+    typeof value === "string" ||
+    value instanceof FormData ||
+    value instanceof Blob ||
+    value instanceof URLSearchParams ||
+    value instanceof ArrayBuffer ||
+    ArrayBuffer.isView(value)
+  )
+}
+
 async function parseResponse(res: Response) {
   const contentType = res.headers.get("content-type") || ""
   if (contentType.includes("application/json")) {
@@ -40,7 +53,7 @@ async function parseResponse(res: Response) {
   return text
 }
 
-export async function request(method: string, path: string, body?: any, opts?: RequestInit) {
+export async function request(method: string, path: string, body?: RequestBody, opts?: RequestInit) {
   const base = getBaseUrl()
   const headers: Record<string, string> = {
     Accept: "application/json",
@@ -54,10 +67,12 @@ export async function request(method: string, path: string, body?: any, opts?: R
     headers["Content-Type"] = "application/json"
   }
 
+  const requestBody = isBodyInit(body) ? body : body == null ? undefined : JSON.stringify(body)
+
   const res = await fetch(`${base}${path}`, {
     method,
     headers,
-    body: body && !(body instanceof FormData) ? JSON.stringify(body) : (body as any),
+    body: requestBody,
     ...opts,
   })
 
@@ -66,8 +81,8 @@ export async function request(method: string, path: string, body?: any, opts?: R
 
 export const api = {
   get: (path: string, opts?: RequestInit) => request("GET", path, undefined, opts),
-  post: (path: string, body?: any, opts?: RequestInit) => request("POST", path, body, opts),
-  put: (path: string, body?: any, opts?: RequestInit) => request("PUT", path, body, opts),
+  post: (path: string, body?: RequestBody, opts?: RequestInit) => request("POST", path, body, opts),
+  put: (path: string, body?: RequestBody, opts?: RequestInit) => request("PUT", path, body, opts),
   del: (path: string, opts?: RequestInit) => request("DELETE", path, undefined, opts),
   setToken,
   getToken,
